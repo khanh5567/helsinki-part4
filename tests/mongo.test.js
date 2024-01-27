@@ -49,6 +49,36 @@ describe("GET request tests", () => {
   });
 });
 
+describe("POST request tests", () => {
+  const sampleBlog = {
+    title: "Programming Fundamentals",
+    author: "Alice Smith",
+    url: "https://programming-books.com/fundamentals",
+    likes: 98,
+  };
+
+  test("add blog to the database", async () => {
+    await api
+      .post("/api/blogs")
+      .send(sampleBlog)
+      .expect("Content-Type", /json/)
+      .expect(201);
+
+    const currentDBData = await helper.blogsInDb();
+
+    expect(currentDBData).toHaveLength(helper.initialBlogs.length + 1);
+  });
+
+  test("new blog is added", async () => {
+    await api.post("/api/blogs").send(sampleBlog);
+
+    const currentDBData = await helper.blogsInDb();
+    const titles = currentDBData.map((blog) => blog.title);
+
+    expect(titles).toContain(sampleBlog.title);
+  });
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });

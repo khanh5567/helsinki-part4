@@ -79,6 +79,25 @@ describe("POST request tests", () => {
   });
 });
 
+describe("default likes", () => {
+  test("default number of like test", async () => {
+    const sampleBlog = {
+      title: "Programming Fundamentals",
+      author: "Alice Smith",
+      url: "https://programming-books.com/fundamentals",
+    };
+
+    await api.post("/api/blogs").send(sampleBlog).expect(201);
+
+    const currentDBData = await helper.blogsInDb();
+    const newlyAddedBlog = currentDBData.find(
+      (blog) => blog.title === sampleBlog.title
+    );
+
+    expect(newlyAddedBlog.likes).toBe(0);
+  });
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });

@@ -143,6 +143,18 @@ describe("DELETE tests", () => {
   });
 });
 
+describe("UPDATE tests", () => {
+  test("change number of likes", async () => {
+    const initialBlogs = await helper.blogsInDb();
+    const updateNote = { ...initialBlogs[0], likes: 77 };
+
+    await api.put(`/api/blogs/${updateNote.id}`).send(updateNote).expect(200);
+
+    const blogAfterUpdate = await Blog.findById(updateNote.id);
+    expect(blogAfterUpdate.likes).toBe(77);
+  });
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });

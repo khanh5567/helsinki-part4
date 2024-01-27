@@ -57,6 +57,18 @@ describe("POST request tests", () => {
     likes: 98,
   };
 
+  const faultyBlogTitle = {
+    author: "Alice Smith",
+    url: "https://programming-books.com/fundamentals",
+    likes: 98,
+  };
+
+  const faultyBlogURL = {
+    title: "Programming Fundamentals",
+    author: "Alice Smith",
+    likes: 98,
+  };
+
   test("add blog to the database", async () => {
     await api
       .post("/api/blogs")
@@ -76,6 +88,17 @@ describe("POST request tests", () => {
     const titles = currentDBData.map((blog) => blog.title);
 
     expect(titles).toContain(sampleBlog.title);
+  });
+
+  test("bad request tests", async () => {
+    const response = await api
+      .post("/api/blogs")
+      .send(faultyBlogTitle)
+      .expect(400);
+
+    expect(response.status).toBe(400);
+
+    await api.post("/api/blogs").send(faultyBlogURL).expect(400);
   });
 });
 

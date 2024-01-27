@@ -42,6 +42,11 @@ describe("GET request tests", () => {
     const authors = result.body.map((blog) => blog.author);
     expect(authors).toContain("Edsger W. Dijkstra");
   });
+
+  test("object has id property", async () => {
+    const result = await api.get("/api/blogs");
+    expect(result.body[0].id).toBeDefined();
+  });
 });
 
 afterAll(async () => {

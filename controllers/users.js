@@ -25,7 +25,12 @@ usersRouter.post("/", async (request, response) => {
 
 usersRouter.get("/", async (request, response) => {
   try {
-    const userLists = await User.find({});
+    const userLists = await User.find({}).populate("notes", {
+      url: 1,
+      author: 1,
+      title: 1,
+      id: 1,
+    });
     const formattedUserLists = userLists.map((user) => user.toJSON());
     response.json(formattedUserLists);
   } catch {

@@ -23,7 +23,7 @@ beforeEach(async () => {
   const promiseArray = blogObjects.map((note) => note.save());
   //ensure that all notes are saved sucessfully before moving on
   await Promise.all(promiseArray);
-}, 5000);
+}, 10000);
 
 describe("GET request tests", () => {
   test("blogs returned as JSON", async () => {
@@ -209,6 +209,25 @@ describe("when there is initially one user in db", () => {
     expect(result.body.error).toBeDefined();
     const usersAtEnd = await helper.usersInDb();
     expect(usersAtEnd).toHaveLength(usersAtStart.length);
+  });
+
+  test("create blog with a user associated with it", async () => {
+    const rootUser = await User.findOne({ username: "root" });
+    const sampleUserID = rootUser._id.toString();
+
+    const blogToBeSaved = {
+      title: "Test",
+      author: "Jimmy",
+      url: "dotcom",
+      likes: 7,
+      user: sampleUserID,
+    };
+
+    const result = await api
+      .post("/api/blogs")
+      .send(blogToBeSaved)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
   });
 });
 

@@ -2,6 +2,7 @@
 const supertest = require("supertest");
 const mongoose = require("mongoose");
 mongoose.set("bufferTimeoutMS", 30000);
+jest.setTimeout(10000);
 
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
@@ -166,7 +167,7 @@ describe("when there is initially one user in db", () => {
     const user = new User({ username: "root", passwordHash });
 
     await user.save();
-  });
+  }, 10000);
 
   test("creation succeeds with a fresh username", async () => {
     const usersAtStart = await helper.usersInDb();
@@ -188,6 +189,26 @@ describe("when there is initially one user in db", () => {
 
     const usernames = usersAtEnd.map((u) => u.username);
     expect(usernames).toContain(newUser.username);
+  });
+
+  test("creation fails with validation", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: "mlu",
+      name: "Matti Luukkainen",
+      password: "sa",
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    expect(result.body.error).toBeDefined();
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
   });
 });
 

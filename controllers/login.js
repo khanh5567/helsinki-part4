@@ -6,9 +6,8 @@ const User = require("../models/user");
 loginRouter.post("/", async (request, response) => {
   const { username, password } = request.body;
 
+  //check for username and password validity
   const user = await User.findOne({ username });
-
-  //check password against the decrypted one in the database
   const passwordCorrect =
     user === null ? false : await bcrypt.compare(password, user.passwordHash);
 
@@ -19,13 +18,13 @@ loginRouter.post("/", async (request, response) => {
     });
   }
 
-  //payload for the token
+  //payload for jwt
   const userForToken = {
     username: user.username,
     id: user._id,
   };
 
-  //digitally sign (create) a token and store it in an env var
+  //generate a token based on SECRET, pass in username and user_id as payload
   const token = jwt.sign(userForToken, process.env.SECRET);
 
   response

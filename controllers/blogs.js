@@ -1,9 +1,21 @@
 /* eslint-disable no-prototype-builtins */
+const jwt = require("jsonwebtoken");
+
+//get token from the HTTP request header
+const getTokenFrom = (request) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.startsWith("Bearer ")) {
+    return authorization.replace("Bearer ", "");
+  }
+  return null;
+};
+
 const blogRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
 
 blogRouter.get("/", async (request, response) => {
+  //similar to SELECT username, name, id WHERE user.id == blog.user_id;
   const blogs = await Blog.find({}).populate("user", {
     username: 1,
     name: 1,
@@ -21,7 +33,16 @@ blogRouter.post("/", async (request, response) => {
     return response.status(400).end();
   }
 
-  const user = await User.findById(request.body.user);
+  //decode the token, verify it matches our secret key, then get the payload
+  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+  //if we didn't receive payload, meaning verify fails
+  if (!decodedToken.id) {
+    return response.status(401).json({ error: "token invalid" });
+  }
+  //use the payload content that was associated with a user when logging in
+  //to find the user in the database
+  const user = await User.findById(decodedToken.id);
+
   const blog = new Blog(request.body);
 
   const result = await blog.save();

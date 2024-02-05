@@ -4,13 +4,13 @@ GET http://localhost:3003/api/blogs
 ###
 POST http://localhost:3003/api/blogs HTTP/1.1
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NWMwMGEzMzBjYjJhY2FmOWI0YjFiYjAiLCJpYXQiOjE3MDcxMTE0NzF9.gkYg-F3pdyBhp2hotfi4x7nT1nvJ3A8obLEx_Zkf1rQ
 
 {
     "title": "API Test",
     "author": "Jimmy",
     "url": "https://localhost:3003/123",
-    "likes": 7,
-    "user": "65c00a330cb2acaf9b4b1bb0"
+    "likes": 7
 }
 
 ###

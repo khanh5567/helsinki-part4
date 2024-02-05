@@ -223,7 +223,7 @@ describe("when there is initially one user in db", () => {
       user: sampleUserID,
     };
 
-    const result = await api
+    await api
       .post("/api/blogs")
       .send(blogToBeSaved)
       .expect(201)

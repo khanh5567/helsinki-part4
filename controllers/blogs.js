@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 //get token from the HTTP request header
 const blogRouter = require("express").Router();
 const Blog = require("../models/blog");
-const User = require("../models/user");
 
 blogRouter.get("/", async (request, response) => {
   //similar to SELECT username, name, id WHERE user.id == blog.user_id;
@@ -31,9 +30,10 @@ blogRouter.post("/", async (request, response) => {
   if (!decodedToken.id) {
     return response.status(401).json({ error: "token invalid" });
   }
+
   //use the payload content that was associated with a user when logging in
   //to find the user in the database
-  const user = await User.findById(decodedToken.id);
+  const user = request.user;
 
   const blog = new Blog({ ...request.body, user: decodedToken.id });
 
@@ -52,17 +52,29 @@ blogRouter.delete("/:id", async (req, res) => {
     return res.status(401).json({ error: "token invalid" });
   }
 
-  const result = await Blog.findById(req.params.id);
+  const requestedID = req.params.id;
+
+  const result = await Blog.findById(requestedID);
 
   const decodedID = decodedToken.id;
   const userID = result.user.id.toString("hex");
 
-  if (userID === decodedID) {
-    await Blog.findByIdAndDelete(req.params.id);
-    return res.status(204).end();
+  //console.log("decoded id", decodedID, " user id ", userID);
+
+  if (userID !== decodedID) {
+    return res.status(401).json({ error: "not authorized" });
   }
 
-  res.status(400).json({ error: "Nothing deleted" });
+  await Blog.findByIdAndDelete(requestedID);
+
+  const user = req.user;
+
+  const newUserNoteLists = user.notes.filter(
+    (note) => note.id.toString("hex") !== requestedID
+  );
+  user.notes = newUserNoteLists;
+  await user.save();
+  return res.status(204).end();
 });
 
 blogRouter.put("/:id", async (request, response) => {

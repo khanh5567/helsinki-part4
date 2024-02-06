@@ -27,7 +27,10 @@ app.use(express.json());
 //extract token prior and place it in request.token
 app.use(middlewares.tokenExtractor);
 
-app.use("/api/blogs", blogRouter);
+//now to get blogs, u must be authenticated
+app.use("/api/blogs", middlewares.userExtractor, blogRouter);
+
+//no need to authenticate for these routes
 app.use("/api/users", userRouter);
 app.use("/api/login", loginRouter);
 

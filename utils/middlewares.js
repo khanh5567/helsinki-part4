@@ -17,6 +17,19 @@ const errorHandler = (error, request, response, next) => {
   next(error);
 };
 
+const jwtVerification = (request, response, next) => {
+  //decode the token, verify it matches our secret key, then get the payload
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
+  //if we didn't receive payload, meaning verify fails
+  if (!decodedToken.id) {
+    return response.status(401).json({ error: "token invalid" });
+  }
+
+  request.decodedPayload = decodedToken;
+
+  next();
+};
+
 const tokenExtractor = (request, response, next) => {
   const authHeader = request.get("authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -37,4 +50,5 @@ module.exports = {
   errorHandler,
   tokenExtractor,
   userExtractor,
+  jwtVerification,
 };

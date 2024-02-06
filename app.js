@@ -24,6 +24,9 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
+//extract token prior and place it in request.token
+app.use(middlewares.tokenExtractor);
+
 app.use("/api/blogs", blogRouter);
 app.use("/api/users", userRouter);
 app.use("/api/login", loginRouter);

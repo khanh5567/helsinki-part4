@@ -14,4 +14,12 @@ const errorHandler = (error, request, response, next) => {
   next(error);
 };
 
-module.exports = { unknownEndpoint, errorHandler };
+const tokenExtractor = (request, response, next) => {
+  const authHeader = request.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    request.token = authHeader.replace("Bearer ", "");
+  }
+  next();
+};
+
+module.exports = { unknownEndpoint, errorHandler, tokenExtractor };

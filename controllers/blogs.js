@@ -2,14 +2,6 @@
 const jwt = require("jsonwebtoken");
 
 //get token from the HTTP request header
-const getTokenFrom = (request) => {
-  const authorization = request.get("authorization");
-  if (authorization && authorization.startsWith("Bearer ")) {
-    return authorization.replace("Bearer ", "");
-  }
-  return null;
-};
-
 const blogRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
@@ -34,7 +26,7 @@ blogRouter.post("/", async (request, response) => {
   }
 
   //decode the token, verify it matches our secret key, then get the payload
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
   //if we didn't receive payload, meaning verify fails
   if (!decodedToken.id) {
     return response.status(401).json({ error: "token invalid" });

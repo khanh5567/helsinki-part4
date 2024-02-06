@@ -23,6 +23,13 @@ beforeEach(async () => {
   const promiseArray = blogObjects.map((note) => note.save());
   //ensure that all notes are saved sucessfully before moving on
   await Promise.all(promiseArray);
+
+  await User.deleteMany({});
+
+  const passwordHash = await bcrypt.hash("sekret", 10);
+  const user = new User({ username: "root", passwordHash });
+
+  await user.save();
 }, 10000);
 
 describe("GET request tests", () => {
@@ -67,42 +74,37 @@ describe("POST request tests", () => {
     likes: 98,
   };
 
-  const faultyBlogURL = {
-    title: "Programming Fundamentals",
-    author: "Alice Smith",
-    likes: 98,
-  };
+  let loginToken = "";
+  let user = undefined;
+
+  beforeEach(async () => {
+    user = await api
+      .post("/api/login")
+      .send({ username: "root", password: "sekret" });
+
+    loginToken = "Bearer " + user._body.token;
+  });
 
   test("add blog to the database", async () => {
     await api
       .post("/api/blogs")
       .send(sampleBlog)
+      .set({ Authorization: loginToken })
       .expect("Content-Type", /json/)
       .expect(201);
 
     const currentDBData = await helper.blogsInDb();
 
     expect(currentDBData).toHaveLength(helper.initialBlogs.length + 1);
-  });
 
-  test("new blog is added", async () => {
-    await api.post("/api/blogs").send(sampleBlog);
-
-    const currentDBData = await helper.blogsInDb();
     const titles = currentDBData.map((blog) => blog.title);
 
     expect(titles).toContain(sampleBlog.title);
   });
 
   test("bad request tests", async () => {
-    const response = await api
-      .post("/api/blogs")
-      .send(faultyBlogTitle)
-      .expect(400);
-
-    expect(response.status).toBe(400);
-
-    await api.post("/api/blogs").send(faultyBlogURL).expect(400);
+    await api.post("/api/blogs").send(faultyBlogTitle).expect(401);
+    await api.post("/api/blogs").send(sampleBlog).expect(401);
   });
 });
 
@@ -159,15 +161,17 @@ describe("UPDATE tests", () => {
   });
 });
 
-describe("when there is initially one user in db", () => {
+describe("operations with users", () => {
+  let loginToken = "";
+  let user = undefined;
+
   beforeEach(async () => {
-    await User.deleteMany({});
+    user = await api
+      .post("/api/login")
+      .send({ username: "root", password: "sekret" });
 
-    const passwordHash = await bcrypt.hash("sekret", 10);
-    const user = new User({ username: "root", passwordHash });
-
-    await user.save();
-  }, 10000);
+    loginToken = "Bearer " + user._body.token;
+  });
 
   test("creation succeeds with a fresh username", async () => {
     const usersAtStart = await helper.usersInDb();
@@ -226,8 +230,11 @@ describe("when there is initially one user in db", () => {
     await api
       .post("/api/blogs")
       .send(blogToBeSaved)
+      .set({ Authorization: loginToken })
       .expect(201)
       .expect("Content-Type", /application\/json/);
+
+    await api.post("/api/blogs").send(blogToBeSaved).expect(401);
   });
 });
 

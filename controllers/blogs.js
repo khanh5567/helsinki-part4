@@ -35,7 +35,7 @@ blogRouter.post("/", async (request, response) => {
   //to find the user in the database
   const user = await User.findById(decodedToken.id);
 
-  const blog = new Blog(request.body);
+  const blog = new Blog({ ...request.body, user: decodedToken.id });
 
   const result = await blog.save();
 
@@ -47,9 +47,22 @@ blogRouter.post("/", async (request, response) => {
 });
 
 blogRouter.delete("/:id", async (req, res) => {
-  const result = await Blog.findByIdAndDelete(req.params.id);
-  if (result) res.status(204).end();
-  else res.status(204).json({ error: "Nothing to delete" });
+  const decodedToken = jwt.verify(req.token, process.env.SECRET);
+  if (!decodedToken.id) {
+    return res.status(401).json({ error: "token invalid" });
+  }
+
+  const result = await Blog.findById(req.params.id);
+
+  const decodedID = decodedToken.id;
+  const userID = result.user.id.toString("hex");
+
+  if (userID === decodedID) {
+    await Blog.findByIdAndDelete(req.params.id);
+    return res.status(204).end();
+  }
+
+  res.status(400).json({ error: "Nothing deleted" });
 });
 
 blogRouter.put("/:id", async (request, response) => {
